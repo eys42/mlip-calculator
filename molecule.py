@@ -3,6 +3,7 @@ from ase.optimize import BFGS
 from ase.vibrations import Vibrations, VibrationsData
 from ase.thermochemistry import IdealGasThermo
 from time import time
+# pyright: reportArgumentType=false
 
 class Molecule():
     """
@@ -123,6 +124,7 @@ class Molecule():
         self._time_to_vibrational_frequencies = time() - t1
         self._vibrationsdata = self._vibrations.get_vibrations()
         print(self._vibrationsdata.tabulate())
+        self._has_vibrational_frequencies = True
 
     def get_time_to_vibrational_frequencies(self) -> float:
         """
@@ -148,3 +150,9 @@ class Molecule():
             geometry=geometry
         )
         self._gibbs_energy = self._thermo.get_gibbs_energy(temperature, pressure)
+
+    def get_thermo(self) -> IdealGasThermo:
+        """
+        Returns the IdealGasThermo object containing the thermochemical properties of the molecule.
+        """
+        return self._thermo

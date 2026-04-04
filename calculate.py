@@ -37,5 +37,4 @@ def freq_and_thermo(molecule : Molecule, geometry : str = 'nonlinear', symmetryn
     molecule.calculate_vibrational_frequencies()
     print(f'Vibrational frequencies calculated in {molecule.get_time_to_vibrational_frequencies():.2f} seconds.')
     print(f'Calculating thermochemical properties for {molecule.get_base_fname()} with model {molecule.get_model()} at T={temperature} K and P={pressure} Pa.')
-    
     molecule.calculate_thermochemistry(geometry=geometry, symmetrynumber=symmetrynumber, temperature=temperature, pressure=pressure)
