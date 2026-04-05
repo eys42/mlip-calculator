@@ -39,13 +39,13 @@ class CalculationQueue:
                 freq_and_thermo(mol_obj, temperature=row['temperature'], pressure=row['pressure'], geometry=row['geometry'], symmetrynumber=row['symmetrynumber'])
                 sys.stdout = sys.__stdout__
             thermo = mol_obj.get_thermo()
-            self.df.at[index, 'E_pot'] = mol_obj.get_atoms().get_potential_energy()
-            self.df.at[index, 'E_ZPE'] = thermo.get_ZPE_correction()
-            self.df.at[index, 'Cv_trans (0->T)'] = thermo.get_ideal_translational_energy(row['temperature'])
-            self.df.at[index, 'Cv_rot (0->T)'] = thermo.get_ideal_rotational_energy(row['geometry'],row['temperature'])
-            self.df.at[index, 'Cv_vib (0->T)'] = thermo.get_vib_energy_contribution(row['temperature'])
-            self.df.at[index, 'U'] = thermo.get_internal_energy(temperature=row['temperature'])
-            self.df.at[index, 'H'] = thermo.get_enthalpy(temperature=row['temperature'])
+            row['E_pot'] = mol_obj.get_atoms().get_potential_energy()
+            row['E_ZPE'] = thermo.get_ZPE_correction()
+            row['Cv_trans (0->T)'] = thermo.get_ideal_translational_energy(row['temperature'])
+            row['Cv_rot (0->T)'] = thermo.get_ideal_rotational_energy(row['geometry'],row['temperature'])
+            row['Cv_vib (0->T)'] = thermo.get_vib_energy_contribution(row['temperature'])
+            row['U'] = thermo.get_internal_energy(temperature=row['temperature'])
+            row['H'] = thermo.get_enthalpy(temperature=row['temperature'])
             S, S_dict = thermo.get_ideal_entropy(row['temperature'],
                                                  translation = True,
                                                  vibration = True,
@@ -54,12 +54,13 @@ class CalculationQueue:
                                                  pressure = row['pressure'],
                                                  electronic = True,
                                                  symmetrynumber=row['symmetrynumber'])
-            self.df.at[index, 'S_trans'] = S_dict['S_t']
-            self.df.at[index, 'S_rot'] = S_dict['S_r']
-            self.df.at[index, 'S_vib'] = S_dict['S_v']
-            self.df.at[index, 'S_elec'] = S_dict['S_e']
-            self.df.at[index, 'S'] = S
-            self.df.at[index, 'G'] = thermo.get_gibbs_energy(temperature=row['temperature'], pressure=row['pressure'])
+            row['S_trans'] = S_dict['S_t']
+            row['S_rot'] = S_dict['S_r']
+            row['S_vib'] = S_dict['S_v']
+            row['S_elec'] = S_dict['S_e']
+            row['S'] = S
+            row['G'] = thermo.get_gibbs_energy(temperature=row['temperature'], pressure=row['pressure'])
+            self.df.iloc[index] = row
             print(f"Finished processing '{row['filename']}'. Results logged to '{row['logfile']}'.")
         except Exception as e:
             print(f"Error processing '{row['filename']}': {e}")
