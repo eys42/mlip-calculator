@@ -12,6 +12,8 @@ class CalculationQueue:
         for col in cols:
             if col not in self.columns:
                 raise ValueError(f'Missing required column: {col} in {filename}.')
+            
+        
 
     def _calculate(self, row, index):
         self.df['E_pot'] = 0.
@@ -29,7 +31,7 @@ class CalculationQueue:
         self.df['G'] = 0.
 
         try:
-            print(f"Processing '{row['filename']}' with model {row['model']} (charge={row['charge']}, spin={row['spin']}).")
+            print(f"Processing '{row['filename']}' with model {row['model']} (charge={row['charge']}, spin={row['spin']}): index {index}.")
             with open(row['logfile'], 'w') as logfile:
                 sys.stdout = logfile
                 mol_obj = convert_file_to_molecule(row['filename'], model=row['model'], charge=row['charge'], spin=row['spin'])
