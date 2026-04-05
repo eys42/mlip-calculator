@@ -12,10 +12,12 @@ class CalculationQueue:
         for col in cols:
             if col not in self.columns:
                 raise ValueError(f'Missing required column: {col} in {filename}.')
+        self.results_df = pd.DataFrame(columns=(cols + ['E_pot', 'E_ZPE', 'Cv_trans (0->T)', 'Cv_rot (0->T)', 'Cv_vib (0->T)', 'U', 'H', 'S_trans', 'S_rot', 'S_vib', 'S_elec', 'S', 'G']))
             
         
 
     def _calculate(self, row, index):
+        """
         self.df['E_pot'] = 0.
         self.df['E_ZPE'] = 0.
         self.df['Cv_trans (0->T)'] = 0.
@@ -29,7 +31,7 @@ class CalculationQueue:
         self.df['S_elec'] = 0.
         self.df['S'] = 0.
         self.df['G'] = 0.
-
+        """
         try:
             print(f"Processing '{row['filename']}' with model {row['model']} (charge={row['charge']}, spin={row['spin']}): index {index}.")
             with open(row['logfile'], 'w') as logfile:
@@ -60,7 +62,7 @@ class CalculationQueue:
             row['S_elec'] = S_dict['S_e']
             row['S'] = S
             row['G'] = thermo.get_gibbs_energy(temperature=row['temperature'], pressure=row['pressure'])
-            self.df.iloc[index] = row
+            self.results_df = pd.concat([self.results_df, pd.DataFrame([row])], ignore_index=True)
             print(f"Finished processing '{row['filename']}'. Results logged to '{row['logfile']}'.")
         except Exception as e:
             print(f"Error processing '{row['filename']}': {e}")
@@ -69,5 +71,5 @@ class CalculationQueue:
         for index, row in self.df.iterrows():
             self._calculate(row, index)
         print("All calculations completed.")
-        self.df.to_excel(f'{self.base_fname}_results.xlsx', index=False)
+        self.results_df.to_excel(f'{self.base_fname}_results.xlsx', index=False)
         print(f"Results saved to '{self.base_fname}_results.xlsx'.")
