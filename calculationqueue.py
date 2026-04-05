@@ -7,14 +7,13 @@ class CalculationQueue:
         self.filename = filename
         self.base_fname = filename.split('.')[0]
         self.df = pd.read_excel(filename)
-        self.index = 0
         self.columns = self.df.columns.tolist()
         cols = ['logfile', 'filename', 'model', 'charge', 'spin', 'fmax', 'max_steps', 'temperature', 'pressure', 'geometry', 'symmetrynumber']
         for col in cols:
             if col not in self.columns:
                 raise ValueError(f'Missing required column: {col} in {filename}.')
 
-    def _calculate(self, row):
+    def _calculate(self, row, index):
         self.df['E_pot'] = 0.
         self.df['E_ZPE'] = 0.
         self.df['Cv_trans (0->T)'] = 0.
@@ -38,13 +37,13 @@ class CalculationQueue:
                 freq_and_thermo(mol_obj, temperature=row['temperature'], pressure=row['pressure'], geometry=row['geometry'], symmetrynumber=row['symmetrynumber'])
                 sys.stdout = sys.__stdout__
             thermo = mol_obj.get_thermo()
-            self.df.at[self.index, 'E_pot'] = mol_obj.get_atoms().get_potential_energy()
-            self.df.at[self.index, 'E_ZPE'] = thermo.get_ZPE_correction()
-            self.df.at[self.index, 'Cv_trans (0->T)'] = thermo.get_ideal_translational_energy(row['temperature'])
-            self.df.at[self.index, 'Cv_rot (0->T)'] = thermo.get_ideal_rotational_energy(row['geometry'],row['temperature'])
-            self.df.at[self.index, 'Cv_vib (0->T)'] = thermo.get_vib_energy_contribution(row['temperature'])
-            self.df.at[self.index, 'U'] = thermo.get_internal_energy(temperature=row['temperature'])
-            self.df.at[self.index, 'H'] = thermo.get_enthalpy(temperature=row['temperature'])
+            self.df.at[index, 'E_pot'] = mol_obj.get_atoms().get_potential_energy()
+            self.df.at[index, 'E_ZPE'] = thermo.get_ZPE_correction()
+            self.df.at[index, 'Cv_trans (0->T)'] = thermo.get_ideal_translational_energy(row['temperature'])
+            self.df.at[index, 'Cv_rot (0->T)'] = thermo.get_ideal_rotational_energy(row['geometry'],row['temperature'])
+            self.df.at[index, 'Cv_vib (0->T)'] = thermo.get_vib_energy_contribution(row['temperature'])
+            self.df.at[index, 'U'] = thermo.get_internal_energy(temperature=row['temperature'])
+            self.df.at[index, 'H'] = thermo.get_enthalpy(temperature=row['temperature'])
             S, S_dict = thermo.get_ideal_entropy(row['temperature'],
                                                  translation = True,
                                                  vibration = True,
@@ -53,19 +52,19 @@ class CalculationQueue:
                                                  pressure = row['pressure'],
                                                  electronic = True,
                                                  symmetrynumber=row['symmetrynumber'])
-            self.df.at[self.index, 'S_trans'] = S_dict['S_t']
-            self.df.at[self.index, 'S_rot'] = S_dict['S_r']
-            self.df.at[self.index, 'S_vib'] = S_dict['S_v']
-            self.df.at[self.index, 'S_elec'] = S_dict['S_e']
-            self.df.at[self.index, 'S'] = S
-            self.df.at[self.index, 'G'] = thermo.get_gibbs_energy(temperature=row['temperature'], pressure=row['pressure'])
+            self.df.at[index, 'S_trans'] = S_dict['S_t']
+            self.df.at[index, 'S_rot'] = S_dict['S_r']
+            self.df.at[index, 'S_vib'] = S_dict['S_v']
+            self.df.at[index, 'S_elec'] = S_dict['S_e']
+            self.df.at[index, 'S'] = S
+            self.df.at[index, 'G'] = thermo.get_gibbs_energy(temperature=row['temperature'], pressure=row['pressure'])
             print(f"Finished processing '{row['filename']}'. Results logged to '{row['logfile']}'.")
         except Exception as e:
             print(f"Error processing '{row['filename']}': {e}")
 
     def run(self):
         for index, row in self.df.iterrows():
-            self._calculate(row)
+            self._calculate(row, index)
         print("All calculations completed.")
         self.df.to_excel(f'{self.base_fname}_results.xlsx', index=False)
         print(f"Results saved to '{self.base_fname}_results.xlsx'.")
