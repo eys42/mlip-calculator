@@ -6,7 +6,7 @@
 *.svg
 *.traj
 *.txt
-*.xlsx
 .DS_Store
 __pycache__/
 vib/
+*.pdf
